@@ -1,4 +1,5 @@
 export interface LineInfo {
+    id: string;
     page : number;
     lineNumber : number;
     charlength : number; 

@@ -3,7 +3,8 @@ import { backendApi } from './api';
 import type { UploadResponse, LineInfo } from './types';
 import FileUploadForm from './fileUploadForm.tsx';
 import CommentsList from './commentList.tsx';
-import { Box } from '@mui/material';
+import { Box, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { v4 as uuidv4  } from 'uuid';
 
 const App: React.FC = () => {
     const [file, setFile] = useState<File | null>(null);
@@ -12,6 +13,9 @@ const App: React.FC = () => {
     const [results, setResults] = useState<UploadResponse | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [backendStatus, setBackendStatus] = useState<string>('Unknown');
+    const [charLimitSubmit, setcharLimitSubmit] = useState<number> (75); 
+    const [selectedPage, setSelectedPage] = useState<number | null> (null);
+    const [linesClientIDs, setlinesClientIDs] = useState<Array<LineInfo & { id: string }>>([]);
 
     React.useEffect(() => {
 	    const checkBackend = async () => {
@@ -51,11 +55,16 @@ const App: React.FC = () => {
 	}
 	setLoading(true);
 	setError(null);
-	setResults(null);
-
 	try{
 	    const response = await backendApi.uploadPdf(file, charLimit);
+	    if (response && response['long lines']){
+		const linesWithIDs = response['long lines'].map(line => ({...line,
+		    id: uuidv4()  // Generate a unique ID for each line
+		}));
+		setlinesClientIDs(linesWithIDs);
+	    }
 	    setResults(response);
+	    setcharLimitSubmit(charLimit);
 	} catch (err){
 	    setError(err instanceof Error ? err.message : "There was an error with the submission");
 	}finally{
@@ -63,11 +72,18 @@ const App: React.FC = () => {
 	}
 
 
-   }, [file, charLimit]);
+   }, [file, charLimit, setcharLimitSubmit]);
+
+    const handleResolve = useCallback((lineIdToDelete: string) => {
+	setlinesClientIDs(prevLines => prevLines.filter(line=> line.id !== lineIdToDelete));
+
+    }, []);
+
 
     const CharLimitChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 	setCharLimit(Number(e.target.value));
       }, []);
+
 
    const clearFile = useCallback(() => {
 	setFile(null);
@@ -75,10 +91,37 @@ const App: React.FC = () => {
 	setError(null);	
    }, []);
 
+    const filteredLines = selectedPage !== null
+	  ? linesClientIDs.filter(line => line.page === selectedPage)
+	: linesClientIDs;
 
 
 return (
      <Box sx={{ maxWidth: 800, mx: 'auto', my: 4 }}>
+	{results && (
+	  <FormControl sx={{ my: 2, minWidth: 200 }}>
+	    <InputLabel>Select Page</InputLabel>
+	    <Select
+	      value={selectedPage === null ? '' : selectedPage}
+	      label="Select Page"
+	      onChange={(e) => { 
+		  const value = e.target.value; 
+		  setSelectedPage( value === '' ? null: Number(value));
+	      }}
+	    >
+	      <MenuItem value = "">All Pages</MenuItem>
+
+	    {[...new Set(results['long lines'].map(line => line.page))].map((pageNum) => (
+		<MenuItem key={pageNum} value={pageNum}>
+		  Page {pageNum}
+		</MenuItem>
+	      ))}
+	    </Select>
+	  </FormControl>
+	)}
+	
+
+
 	<FileUploadForm
 	  file={file}
 	  charLimit={charLimit}
@@ -89,14 +132,16 @@ return (
 	  onSubmit={SubmitFile}
 	  onClear={clearFile}
 	/>
-	
+
 	{results?.['long lines'] && results['long lines'].length === 0 && (
 	  <p>No long lines found.</p>
 	)}
 
-	{results?.['long lines'] && results['long lines'].length > 0 && (
-	  <CommentsList longLines={results['long lines']}
-	    charLimit={charLimit}
+
+	{results?.['long lines'] && results['long lines'].length > 0  &&(
+	  <CommentsList longLines={filteredLines}
+	    charLimitSubmit={charLimitSubmit}
+	    onResolve={handleResolve}
 	  />
 	)}
       </Box>
