@@ -23,24 +23,30 @@ const CommentsList: React.FC<CommentsListProps> = ({ longLines, charLimitSubmit,
     return (
     <Stack spacing={2} sx={{ mt: 4 }}>
       {longLines.map((line, index) => (
-        <Card key={index} variant="outlined">
+        <Card key={index} variant="outlined" sx={{boxShadow: 4, borderRadius: 2}}>
           <CardContent>
-            <Typography variant="subtitle2" color="text.secondary">
+            <Typography variant="subtitle2" color="text.secondary" sx={{
+		color: 'black'
+	    }}>
               Page {line.page} — Line {line.lineNumber} — {line.charlength}/{charLimitSubmit} Chars
             </Typography>
-            <Typography variant="body1" sx={{ mt: 1 }}>
+            <Typography variant="h6" sx={{ mt: 1 }}>
               {line.text}
             </Typography>
 	    <CardActions>
 		<Button variant="contained" sx={{
 		    backgroundColor: "green",
 		    color: "white",
-		    justifyContent: ""
+		    justifyContent: "",
+		    boxShadow: 'none'
 		}} onClick={() => onResolve(line.id)}>Resolve</Button>
 
 		<Button variant="contained" sx={{
 		    backgroundColor: "white",
-		    color: "black"
+		    color: "black",
+		    boxShadow: 'none',
+		    borderColor:'grey',
+		    border: 1
 		}}>Ai Suggestion</Button>
 	    </CardActions>
 

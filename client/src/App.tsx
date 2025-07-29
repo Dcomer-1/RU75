@@ -3,8 +3,9 @@ import { backendApi } from './api';
 import type { UploadResponse, LineInfo } from './types';
 import FileUploadForm from './fileUploadForm.tsx';
 import CommentsList from './commentList.tsx';
-import { Box, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { Button, Typography, Box, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { v4 as uuidv4  } from 'uuid';
+import UploadFileRoundedIcon from '@mui/icons-material/UploadFileRounded';
 
 const App: React.FC = () => {
     const [file, setFile] = useState<File | null>(null);
@@ -98,7 +99,42 @@ const App: React.FC = () => {
 
 return (
      <Box sx={{ maxWidth: 800, mx: 'auto', my: 4 }}>
+	{!results && (
+	      <>
+		<Typography variant="h3" align="center" gutterBottom>
+		  PDF Line Length Analyzer
+		</Typography>
+		<FileUploadForm
+		  file={file}
+		  charLimit={charLimit}
+		  loading={loading}
+		  error={error}
+		  onFileSelect={FileSelect}
+		  onCharLimitChange={CharLimitChange}
+		  onSubmit={SubmitFile}
+		  onClear={clearFile}
+		/>
+	      </>
+	    )}
+
 	{results && (
+	<>
+		<Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+		  <Typography variant="h4">
+		    Analysis Results
+		  </Typography>
+		  <Button sx={{border: 'none', boxShadow: 1, fontSize: 40}} 
+		    onClick={clearFile}
+		    startIcon={<UploadFileRoundedIcon  sx={{color: 'black'}} />} 
+		  >
+		    <Typography fontSize={17} sx={{color: 'black'}}>
+
+		    Upload New PDF
+
+		    </Typography>
+		  </Button>
+		</Box>
+
 	  <FormControl sx={{ my: 2, minWidth: 200 }}>
 	    <InputLabel>Select Page</InputLabel>
 	    <Select
@@ -118,34 +154,25 @@ return (
 	      ))}
 	    </Select>
 	  </FormControl>
-	)}
+	
 	
 
 
-	<FileUploadForm
-	  file={file}
-	  charLimit={charLimit}
-	  loading={loading}
-	  error={error}
-	  onFileSelect={FileSelect}
-	  onCharLimitChange={CharLimitChange}
-	  onSubmit={SubmitFile}
-	  onClear={clearFile}
-	/>
+	{results['long lines'] && results['long lines'].length === 0 && (
+          <p>No long lines found.</p>
+        )}
 
-	{results?.['long lines'] && results['long lines'].length === 0 && (
-	  <p>No long lines found.</p>
-	)}
-
-
-	{results?.['long lines'] && results['long lines'].length > 0  &&(
-	  <CommentsList longLines={filteredLines}
-	    charLimitSubmit={charLimitSubmit}
-	    onResolve={handleResolve}
-	  />
-	)}
-      </Box>
-    );
+        {results['long lines'] && results['long lines'].length > 0 && (
+          <CommentsList 
+            longLines={filteredLines}
+            charLimitSubmit={charLimitSubmit}
+            onResolve={handleResolve}
+          />
+        )}
+      </>
+    )}
+  </Box>
+);
 }
 
 export default App
