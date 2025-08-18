@@ -26,6 +26,10 @@ const CommentsList: React.FC<CommentsListProps> = ({
     );
   }
 
+const copyText = (text: string) =>{
+    navigator.clipboard.writeText(text);
+}
+
 return (
     <Stack spacing={2} sx={{ mt: 4, px: 2}}>
       <AnimatePresence>
@@ -71,10 +75,10 @@ return (
 			Page {line.page} — Line {line.lineNumber} — {line.charlength}/{charLimitSubmit} chars
 		      </Typography>
 		      <Chip
-			label={severity === 'error' ? 'Error' : 'Warning'}
+			label={isResolved ? 'Success' : 'Error'}
 			color={severity === 'error' ? 'error' : 'warning'}
 			size="small"
-			sx={{ opacity: isResolved ? 0.5 : 1 }}
+			sx={{ opacity: isResolved ? 0.5 : 1, bgcolor: isResolved ? ' #1E9C07': 'Error' }}
 		      />
 		    </Box>
 		    
@@ -100,11 +104,11 @@ return (
 			  borderRadius: 1.5,
 			  textTransform: 'none',
 			  fontWeight: 600,
-			  color: 'black',
-			  backgroundColor: "grey.100",
+			  color: isResolved? 'white' : 'black',
+			  backgroundColor: isResolved? '#1E9C07' : "grey.100",
 			  border: 'none',
 			  '&:hover':{
-			    backgroundColor: "#cc0033",
+			    backgroundColor: isResolved? "#157005 " : "#cc0033",
 			    color: "white"
 			    }
 			}}
@@ -114,7 +118,13 @@ return (
 		      <Button
 			variant="outlined"
 			size="small"
-			onClick={(e) => e.stopPropagation()}
+			onClick={() => {
+				if (isResolved == false) {
+				copyText(line.text)
+				}
+			    //e.stopPropagation();
+			    }
+			}
 			sx={{ 
 			  boxShadow: 'none',
 			  minWidth: 'auto',
@@ -128,12 +138,12 @@ return (
 			  backgroundColor: "grey.100",
 			  border: 'none',
 			  '&:hover':{
-			    backgroundColor: "#cc0033",
-			    color: "white"
+			    backgroundColor: isResolved? "None" : "#cc0033",
+			    color: isResolved? "black": "white"
 			    }
 			}}
 		      >
-			AI Suggestion
+			Copy
 		      </Button>
 		    </Box>
 		  </Box>
