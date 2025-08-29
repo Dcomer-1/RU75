@@ -20,3 +20,12 @@ export interface StatusResponse {
     Status : string;
     Time : string;
 }
+
+export type DeleteSuccessResponse = {
+    [filename : string] : 'Successfully Deleted Pdf';
+}
+
+export type DeleteErrorResponse = {
+    error : 'Error Deleteing Pdf';
+}
+

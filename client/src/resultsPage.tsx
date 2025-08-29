@@ -4,6 +4,8 @@ import CommentsList from './commentList';
 import type { UploadResponse, LineInfo } from './types';
 import { UploadFile, Delete } from '@mui/icons-material';
 import PageFilter from './components/PageFilter';
+import { backendApi } from './api';
+import { useAuth } from '@clerk/clerk-react';
 
 interface resultsPageProps{
    results: UploadResponse;
@@ -12,9 +14,10 @@ interface resultsPageProps{
    filteredLines: Array<LineInfo & { id: string }>;
    selectedPage: number | null;
    setSelectedPage: (page: number | null) => void;
-   handleResolve: (lineIdToDelete: string) => void;
+   handleResolve: (lineIdToDelete: string, isResolved: boolean) => void;
    clearFile: () => void;
    resolvedLineIds: Set<string>;
+   token: string | null;
 }
 const ResultsPage: React.FC<resultsPageProps> = ({
     results,
@@ -28,9 +31,24 @@ const ResultsPage: React.FC<resultsPageProps> = ({
     resolvedLineIds,
 }) => {
 
+const {getToken} = useAuth();
+async function handleDelete () {
+    try{
+	const token = await getToken();
+	await backendApi.deletePdf(file, token); 
+	console.log('PDF successfully deleted')
+	return true
+    }
+    catch (error){
+	console.error('Error Deleting File:',error)
+	return false
+    }
+
+}
+
     const availablePages = [...new Set(results['long lines'].map((line) => line.page))];
 return (
-<Box sx={{ paddingTop: 10, maxWidth: 1000, mx: 'auto', my: 4, px: 2 }} className="fade-in">
+<Box sx={{ paddingTop: 12, maxWidth: 1000, mx: 'auto', my: 4, px: 2 }} className="fade-in">
   {/* Summary and File Card Side-by-Side */}
   {results && results['long lines']?.length > 0 && (
     <>
@@ -104,7 +122,15 @@ return (
 
           {/* Clear File Button */}
           <IconButton
-            onClick={clearFile}
+            onClick={async() => {
+		const success = await handleDelete();
+		if (success) {
+		    clearFile();
+		}
+		else {
+		   console.error('Error with clear file button'); 	
+		}
+	    }}
             sx={{
               color: 'text.secondary',
               '&:hover': {

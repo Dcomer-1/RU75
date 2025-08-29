@@ -1,4 +1,4 @@
-import type { StatusResponse, UploadResponse } from "./types";
+import type { DeletedPDFResponse, StatusResponse, UploadResponse } from "./types";
 
 const API_BASE_URL = 'http://localhost:5000';
 
@@ -11,7 +11,7 @@ export const backendApi = {
 	return response.json();
     },
 
-    uploadPdf: async (file: File, charLimit: number): 
+    uploadPdf: async (file: File, charLimit: number, token: any): 
 	Promise<UploadResponse> => {
 	const formData = new FormData;
 	formData.append('file', file);
@@ -19,6 +19,9 @@ export const backendApi = {
 
 	const response = await fetch(`${API_BASE_URL}/upload`, {
 	    method: 'POST',
+	    headers: {
+		'Authorization' : `Bearer ${token}`
+	    },
 	    body: formData,
 	});
 
@@ -26,5 +29,21 @@ export const backendApi = {
 	    throw new Error('Failed to upload file');
 	}
 	return response.json();
+    },
+
+    deletePdf: async (file: File, token: any):
+	Promise<DeletedPDFResponse> => {
+	    const response = await fetch(`${API_BASE_URL}/deletePdf/${file.name}`,{
+		method: 'DELETE',
+		headers: {
+		    'Authorization' : `Bearer ${token}`
+		},
+	    });
+	    
+	    if (!response.ok){
+		throw new Error
+		('Failed to delete file');
+	    }
+	    return response.json();
     },
 };

@@ -4,9 +4,9 @@ import { backendApi } from './api';
 import type { UploadResponse } from './types';
 import UploadFileRoundedIcon from '@mui/icons-material/UploadFileRounded';
 import TroubleshootRoundedIcon from '@mui/icons-material/TroubleshootRounded';
-import { linearGradient } from 'framer-motion/client';
-import { rgba } from 'framer-motion';
 import backgroundImage from './assets/Rutgers_Law_School_in_Newark_2.jpg';
+import { useAuth } from '@clerk/clerk-react';
+
 interface uploadPageProps{
     onFileAnalyzed: (results: UploadResponse, file: File, charLimit: number) => void;
 }
@@ -18,6 +18,7 @@ const UploadPage: React.FC<uploadPageProps> = ({onFileAnalyzed}) => {
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [, setResults] = useState<UploadResponse | null>(null);
+    const {getToken} = useAuth();
 
     const FileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
 	let selectedFile;
@@ -45,7 +46,8 @@ const UploadPage: React.FC<uploadPageProps> = ({onFileAnalyzed}) => {
 	setLoading(true);
 	setError(null);
 	try{
-	    const response = await backendApi.uploadPdf(file, charLimit);
+	    const token = await getToken();
+	    const response = await backendApi.uploadPdf(file, charLimit, token);
 	    //needs to stop before this point
 	    onFileAnalyzed(response, file, charLimit);
 	} catch (err){
@@ -169,6 +171,9 @@ return (
 		      },
 		      '& label.Mui-focused': {
 			color: '#dc2626'
+		      },
+		     '& .MuiOutlinedInput-root:hover fieldset': {
+			borderColor: '#b91c1c', // hover border
 		      }
 		    }}
 		    helperText="Set max characters per line (10–200)"
